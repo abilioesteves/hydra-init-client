@@ -16,3 +16,6 @@ whisper-client
 
 # run output
 token.json
+
+# VS Code
+.idea/
