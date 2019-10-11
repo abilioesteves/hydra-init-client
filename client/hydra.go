@@ -132,11 +132,9 @@ func (client *WhisperClient) IntrospectToken(token string) (result Token, err er
 	logrus.Debugf("IntrospectToken - POST payload: '%v'", payloadData)
 
 	resp, data, err := httpClient.Post("/oauth2/introspect/", payloadData)
-	if err != nil || resp == nil || resp.StatusCode != 200 {
-		return Token{}, err;
+	if err == nil && resp != nil && resp.StatusCode == 200 {
+		err = json.Unmarshal(data, &result)
 	}
-
-	err = json.Unmarshal(data, &result)
 
 	return result, err
 }
