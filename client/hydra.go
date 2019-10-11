@@ -120,6 +120,10 @@ func (client *hydraClient) updateOAuth2Client() (result *OAuth2Client, err error
 // IntrospectToken calls hydra to introspect a access or refresh token
 func (client *WhisperClient) IntrospectToken(token string) (result Token, err error) {
 	httpClient, err := gohclient.New(nil, client.admin.BaseURL.String())
+	if err != nil {
+		return Token{}, err
+	}
+
 	httpClient.ContentType = "application/x-www-form-urlencoded"
 	httpClient.Accept = "application/json"
 
@@ -128,9 +132,12 @@ func (client *WhisperClient) IntrospectToken(token string) (result Token, err er
 	logrus.Debugf("IntrospectToken - POST payload: '%v'", payloadData)
 
 	resp, data, err := httpClient.Post("/oauth2/introspect/", payloadData)
-	if err == nil && resp != nil && resp.StatusCode == 200 {
-		err = json.Unmarshal(data, &result)
+	if err != nil || resp == nil || resp.StatusCode != 200 {
+		return Token{}, err;
 	}
+
+	err = json.Unmarshal(data, &result)
+
 	return result, err
 }
 
