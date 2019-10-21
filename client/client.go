@@ -153,7 +153,7 @@ func (client *WhisperClient) DoClientCredentialsFlow() (t *oauth2.Token, err err
 }
 
 // GetLoginURL retrieves the hydra login url
-func (client *WhisperClient) GetLoginURL() (string, error) {
+func (client *WhisperClient) GetOAuth2LoginURL() (string, error) {
 	return client.oah.getLoginURL()
 }
 
