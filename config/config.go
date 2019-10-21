@@ -26,7 +26,7 @@ const (
 	clientSecret = "client-secret"
 	logLevel     = "log-level"
 	scopes       = "scopes"
-	redirectURIs = "redirect-uris"
+	redirectURI  = "redirect-uri"
 )
 
 // Config define the fields that will be passed via cmd
@@ -38,7 +38,7 @@ type Config struct {
 	ClientSecret   string
 	LogLevel       string
 	Scopes         []string
-	RedirectURIs   []string
+	RedirectURI    string
 }
 
 // AddFlags adds flags for Builder.
@@ -48,7 +48,7 @@ func AddFlags(flags *pflag.FlagSet) {
 	flags.String(clientSecret, "", "[optional] The client secret for this app, in terms of oauth2 client credentials. Must be at least 6 characters long. If not set, client is considered public and should perform the authorization code flow with PKCE")
 	flags.String(logLevel, "info", "[optional] The log level (trace, debug, info, warn, error, fatal, panic).")
 	flags.String(scopes, "", "[optional] A comma separated list of scopes the client can ask for.")
-	flags.String(redirectURIs, "", "[optional] A comma separated list of possible redirect_uris this client can talk to when performing an oauth2 authorization code flow.")
+	flags.String(redirectURI, "", "[optional] Possible redirect_uri this client can talk to when performing an oauth2 authorization code flow.")
 }
 
 // InitFromViper initializes the flags from Viper.
@@ -59,7 +59,7 @@ func (c *Config) InitFromViper(v *viper.Viper) *Config {
 	c.ClientSecret = v.GetString(clientSecret)
 	c.LogLevel = v.GetString(logLevel)
 	c.Scopes = strings.Split(v.GetString(scopes), ",")
-	c.RedirectURIs = strings.Split(v.GetString(redirectURIs), ",")
+	c.RedirectURI = v.GetString(redirectURI)
 
 	c.WhisperURL, err = url.Parse(v.GetString(whisperURL))
 	gohtypes.PanicIfError("Invalid whisper url", 500, err)

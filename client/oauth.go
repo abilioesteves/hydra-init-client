@@ -2,41 +2,32 @@ package client
 
 import (
 	"context"
+	"github.com/labbsr0x/whisper-client/misc"
 	"net/url"
 
 	"golang.org/x/oauth2"
 )
 
-// OAuthHelper holds the info and methods to help integrate with oauth
-type OAuthHelper struct {
-	codeVerifier string
-	oauthURL     *url.URL
-	clientID     string
-	clientSecret string
-	oauth2Client *oauth2.Config
-	state        string
-}
-
 // Init initializes the oauth helper from a whisper client
-func (oauthh *OAuthHelper) Init(oauthURL, redirectURL *url.URL, clientID, clientSecret string, scopes []string) *OAuthHelper {
-	oauthh.oauthURL = oauthURL
-	oauthh.clientID = clientID
-	oauthh.clientSecret = clientSecret
-	oauthh.oauth2Client = oauthh.getXOAuth2Client(redirectURL.String(), scopes)
+func (oah *oAuthHelper) init(oauthURL, redirectURL *url.URL, clientID, clientSecret string, scopes []string) *oAuthHelper {
+	oah.oauthURL = oauthURL
+	oah.clientID = clientID
+	oah.clientSecret = clientSecret
+	oah.oauth2Client = oah.getXOAuth2Client(redirectURL.String(), scopes)
 
-	return oauthh
+	return oah
 }
 
 // GetLoginURL builds the login url to authenticate with whisper
-func (oauthh *OAuthHelper) GetLoginURL() (string, error) {
-	state, nonce, err := getStateAndNonce()
+func (oah *oAuthHelper) getLoginURL() (string, error) {
+	state, nonce, err := misc.GetStateAndNonce()
 	if err == nil {
-		codeVerifier, codeChallenge, err := getCodeVerifierAndChallenge()
-		oauthh.codeVerifier = codeVerifier
-		oauthh.state = state
+		codeVerifier, codeChallenge, err := misc.GetCodeVerifierAndChallenge()
+		oah.codeVerifier = codeVerifier
+		oah.state = state
 
 		if err == nil {
-			return oauthh.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256")), nil
+			return oah.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256")), nil
 		}
 	}
 
@@ -44,18 +35,18 @@ func (oauthh *OAuthHelper) GetLoginURL() (string, error) {
 }
 
 // ExchangeCodeForToken performs the code exchange for an oauth token
-func (oauthh *OAuthHelper) ExchangeCodeForToken(code string) (token *oauth2.Token, err error) {
-	return oauthh.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, getNoSSLClient()), code, oauth2.SetAuthURLParam("state", oauthh.state), oauth2.SetAuthURLParam("code_verifier", string(oauthh.codeVerifier)))
+func (oah *oAuthHelper) exchangeCodeForToken(code string) (token *oauth2.Token, err error) {
+	return oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", oah.state), oauth2.SetAuthURLParam("code_verifier", string(oah.codeVerifier)))
 }
 
 // getXOAuth2Client gets an oauth2 client to fire authorization flows
-func (oauthh *OAuthHelper) getXOAuth2Client(redirectURL string, scopes []string) *oauth2.Config {
-	authURL, _ := oauthh.oauthURL.Parse("/oauth2/auth")
-	tokenURL, _ := oauthh.oauthURL.Parse("/oauth2/token")
+func (oah *oAuthHelper) getXOAuth2Client(redirectURL string, scopes []string) *oauth2.Config {
+	authURL, _ := oah.oauthURL.Parse("/oauth2/auth")
+	tokenURL, _ := oah.oauthURL.Parse("/oauth2/token")
 
 	return &oauth2.Config{
-		ClientID:     oauthh.clientID,
-		ClientSecret: oauthh.clientSecret,
+		ClientID:     oah.clientID,
+		ClientSecret: oah.clientSecret,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  authURL.String(),
 			TokenURL: tokenURL.String(),

@@ -3,8 +3,12 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
+	"github.com/labbsr0x/goh/gohclient"
 	"github.com/labbsr0x/whisper-client/misc"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/clientcredentials"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -19,14 +23,18 @@ import (
 
 // InitFromConfig initialize a whisper client from flags
 func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClient {
-	client.hydraClient = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.Scopes, config.RedirectURIs)
+	redirectURL, err := url.Parse(config.RedirectURI)
+	gohtypes.PanicIfError("Unable to parse the redirect url", http.StatusInternalServerError, err)
+
+	client.oah = new(oAuthHelper).init(config.HydraPublicURL, redirectURL, config.ClientID, config.ClientSecret, config.Scopes)
+	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.RedirectURI, config.Scopes)
 	client.isPublic = len(strings.ReplaceAll(config.ClientSecret, " ", "")) == 0
 
 	return client
 }
 
 // InitFromParams initializes a whisper client from normal params
-func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret string, scopes, redirectURIs []string) *WhisperClient {
+func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, redirectURI string, scopes []string) *WhisperClient {
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(whisperURL)
 
 	whisperURI, err := url.Parse(whisperURL)
@@ -43,21 +51,21 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret s
 		HydraAdminURL:  hydraAdminURI,
 		HydraPublicURL: hydraPublicURI,
 		Scopes:         scopes,
-		RedirectURIs:   redirectURIs,
+		RedirectURI:    redirectURI,
 	})
 }
 
 // CheckCredentials talks to the admin service to check wheather the client_id should be created and fires a client credentials flow accordingly (if pkce, client credentials flow is not fired)
 func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
-	hc, err := client.getHydraOAuth2Client()
+	hc, err := client.hc.getHydraOAuth2Client()
 
 	if err == nil && hc == nil { // NOT FOUND; Client should be created
-		hc, err = client.createOAuth2Client()
+		hc, err = client.hc.createOAuth2Client()
 	}
 
 	if err == nil {
-		if hc.Scopes != strings.Join(client.scopes, " ") || !reflect.DeepEqual(hc.RedirectURIs, client.RedirectURIs) {
-			_, err = client.updateOAuth2Client()
+		if hc.Scopes != strings.Join(client.hc.scopes, " ") || !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) {
+			_, err = client.hc.updateOAuth2Client()
 		}
 
 		if err == nil && !client.isPublic {
@@ -72,7 +80,7 @@ func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
 func (client *WhisperClient) GetTokenAsJSONStr(t *oauth2.Token) string {
 	buf := new(bytes.Buffer)
 	enc := json.NewEncoder(buf)
-	enc.Encode(t)
+	_ = enc.Encode(t)
 	return buf.String()
 }
 
@@ -84,7 +92,7 @@ func (client *WhisperClient) GetMuxSecurityMiddleware() mux.MiddlewareFunc {
 			var token Token
 			var err error
 
-			if tokenString, err = getAccessTokenFromRequest(r); err == nil {
+			if tokenString, err = misc.GetAccessTokenFromRequest(r); err == nil {
 				if token, err = client.IntrospectToken(tokenString); err == nil {
 					if token.Active {
 						newR := r.WithContext(context.WithValue(r.Context(), TokenKey, token))
@@ -96,4 +104,65 @@ func (client *WhisperClient) GetMuxSecurityMiddleware() mux.MiddlewareFunc {
 			gohtypes.PanicIfError("Unauthorized user", 401, err)
 		})
 	}
+}
+
+// IntrospectToken calls hydra to introspect a access or refresh token
+func (client *WhisperClient) IntrospectToken(token string) (result Token, err error) {
+	httpClient, err := gohclient.New(nil, client.hc.admin.BaseURL.String())
+	if err != nil {
+		return Token{}, err
+	}
+
+	httpClient.ContentType = "application/x-www-form-urlencoded"
+	httpClient.Accept = "application/json"
+
+	payload := url.Values{"token": []string{token}, "scopes": client.hc.scopes}
+	payloadData := bytes.NewBufferString(payload.Encode()).Bytes()
+	logrus.Debugf("IntrospectToken - POST payload: '%v'", payloadData)
+
+	resp, data, err := httpClient.Post("/oauth2/introspect/", payloadData)
+	if err == nil && resp != nil && resp.StatusCode == 200 {
+		err = json.Unmarshal(data, &result)
+	}
+
+	return result, err
+}
+
+// DoClientCredentialsFlow calls hydra's oauth2/token and starts a client credentials flow
+// this method is only correctly executed if the registered client is not public, i.e, has non-empty client secret
+func (client *WhisperClient) DoClientCredentialsFlow() (t *oauth2.Token, err error) {
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
+		Transport: &Transporter{
+			FakeTLSTermination: true,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		},
+	})
+
+	u, _ := client.hc.public.BaseURL.Parse("/oauth2/token")
+	oauthConfig := clientcredentials.Config{
+		ClientID:     client.hc.clientID,
+		ClientSecret: client.hc.clientSecret,
+		TokenURL:     u.String(),
+		Scopes:       client.hc.scopes,
+		AuthStyle:    oauth2.AuthStyleInParams,
+	}
+
+	return oauthConfig.Token(ctx)
+}
+
+// GetLoginURL retrieves the hydra login url
+func (client *WhisperClient) GetLoginURL() (string, error) {
+	return client.oah.getLoginURL()
+}
+
+// ExchangeCodeForToken retrieves a token provided a valid code
+func (client *WhisperClient) ExchangeCodeForToken (code string) (token *oauth2.Token, err error) {
+	return client.oah.exchangeCodeForToken(code)
+}
+
+// Logout logs out
+func (client *WhisperClient) Logout (subject string) error {
+	return client.hc.logout(subject)
 }

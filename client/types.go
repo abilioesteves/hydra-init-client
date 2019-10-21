@@ -1,16 +1,12 @@
 package client
 
 import (
+	"golang.org/x/oauth2"
 	"net/http"
+	"net/url"
 
 	"github.com/labbsr0x/goh/gohclient"
 )
-
-// WhisperClient holds the info and structures a whisper client must
-type WhisperClient struct {
-	*hydraClient
-	isPublic bool
-}
 
 type key string
 
@@ -18,6 +14,13 @@ const (
 	// TokenKey defines the key that shall be used to store a token in a requests' context
 	TokenKey key = "token"
 )
+
+// WhisperClient holds the info and structures a whisper client must
+type WhisperClient struct {
+	hc       *hydraClient
+	oah      *oAuthHelper
+	isPublic bool
+}
 
 // hydraClient holds data and methods to communicate with an hydra service instance
 type hydraClient struct {
@@ -30,6 +33,16 @@ type hydraClient struct {
 
 	tokenEndpointAuthMethod string
 	grantTypes              []string
+}
+
+// oAuthHelper holds the info and methods to help integrate with oauth
+type oAuthHelper struct {
+	codeVerifier string
+	oauthURL     *url.URL
+	clientID     string
+	clientSecret string
+	oauth2Client *oauth2.Config
+	state        string
 }
 
 // Token holds a hydra token's data
