@@ -31,9 +31,10 @@ whisperURL := "http://localhost:7070"
 clientID := "client"
 clientSecret := "password"
 scopes := []string{"client-specific-stuff-01 client-specific-stuff-02"}
-redirectURI := "http://redirect"
+loginRedirectURI := "http://redirect"
+logoutRedirectURI := "http://redirect"
 
-whisperClient.InitFromParams(whisperURL, clientID, clientSecret, redirectURI, scopes)
+whisperClient.InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURI, logoutRedirectURI, scopes)
 
 t, err := whisperClient.CheckCredentials()
 
