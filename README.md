@@ -6,7 +6,7 @@ Defines a script and a library to be used when initializing a client app that co
 
 This script/lib takes care of creating the Whisper client in case it does not exist.
 
-Given that, when firing up your client app, you'll need to provide a `client-id`, a `client-secret`, a list of allowed `redirect-uris` and Whisper's endpoint `whisper-url`. 
+Given that, when firing up your client app, you'll need to provide a `client-id`, a `client-secret`, a `login-redirect-uri`, a `logout-redirect-uri` and Whisper's endpoint `whisper-url`. 
 
 The scopes that your application is able to ask for when issuing tokens are set via the `scopes` variable.
 
