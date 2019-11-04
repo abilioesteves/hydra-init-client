@@ -27,8 +27,16 @@ func (client *hydraClient) initHydraClient(hydraAdminURL, hydraPublicURL, client
 	client.scopes = scopes
 	client.clientID = clientID
 	client.clientSecret = clientSecret
-	client.RedirectURIs = []string{loginRedirectURL}
-	client.PostLogoutRedirectURIs = []string{logoutRedirectURL}
+	client.RedirectURIs = []string{}
+	client.PostLogoutRedirectURIs = []string{}
+
+	if len(loginRedirectURL) > 0 {
+		client.RedirectURIs = append(client.RedirectURIs, loginRedirectURL)
+	}
+
+	if len(logoutRedirectURL) > 0 {
+		client.RedirectURIs = append(client.RedirectURIs, logoutRedirectURL)
+	}
 
 	client.tokenEndpointAuthMethod = "none"
 	client.grantTypes = []string{"authorization_code", "refresh_token"}
