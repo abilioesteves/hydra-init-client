@@ -34,9 +34,15 @@ func (oah *oAuthHelper) getLoginURL() (string, error) {
 	return "", err
 }
 
-// getLogoutURL builds the revokeLoginSessions url to unauthenticate with whisper
-func (oah *oAuthHelper) getLogoutURL() (string, error) {
-	return oah.oauthURL.Host + "/oauth2/sessions/revokeLoginSessions", nil
+// getLogoutURL builds the logout url to unauthenticate with whisper
+func (oah *oAuthHelper) getLogoutURL(openidToken, postLogoutRedirectURI string) (string, error) {
+	path := oah.oauthURL.String() + "/oauth2/sessions/logout"
+
+	if openidToken != "" && postLogoutRedirectURI != "" {
+		path = path + "?id_token_hint=" + openidToken + "&post_logout_redirect_uri=" + postLogoutRedirectURI
+	}
+
+	return path, nil
 }
 
 // ExchangeCodeForToken performs the code exchange for an oauth token
