@@ -25,12 +25,12 @@ type WhisperClient struct {
 
 // hydraClient holds data and methods to communicate with an hydra service instance
 type hydraClient struct {
-	public       *gohclient.Default
-	admin        *gohclient.Default
-	scopes       []string
-	clientID     string
-	clientSecret string
-	RedirectURIs []string
+	public                 *gohclient.Default
+	admin                  *gohclient.Default
+	scopes                 []string
+	clientID               string
+	clientSecret           string
+	RedirectURIs           []string
 	PostLogoutRedirectURIs []string
 
 	tokenEndpointAuthMethod string
@@ -48,10 +48,10 @@ type oAuthHelper struct {
 }
 
 type Tokens struct {
-	AccessToken string
+	AccessToken  string
 	RefreshToken string
-	OpenIdToken string
-	Scope string
+	OpenIdToken  string
+	Scope        string
 }
 
 // Token holds a hydra token's data

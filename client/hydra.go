@@ -101,7 +101,7 @@ func (client *hydraClient) updateOAuth2Client() (result *OAuth2Client, err error
 			Scopes:                  strings.Join(client.scopes, " "),
 			TokenEndpointAuthMethod: client.tokenEndpointAuthMethod,
 			RedirectURIs:            client.RedirectURIs,
-			PostLogoutRedirectURIs: client.PostLogoutRedirectURIs,
+			PostLogoutRedirectURIs:  client.PostLogoutRedirectURIs,
 			GrantTypes:              client.grantTypes,
 		})
 

@@ -66,8 +66,8 @@ func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
 
 	if err == nil {
 		diffScope := func() bool { return hc.Scopes != strings.Join(client.hc.scopes, " ") }
-		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs)}
-		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs)}
+		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) }
+		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs) }
 
 		if diffScope() || diffRedirects() || diffLogoutRedirects() {
 			_, err = client.hc.updateOAuth2Client()

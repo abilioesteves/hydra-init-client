@@ -53,10 +53,10 @@ func (oah *oAuthHelper) exchangeCodeForToken(code string) (tokens Tokens, err er
 		return
 	}
 
-	tokens = Tokens {
-		AccessToken: token.AccessToken,
+	tokens = Tokens{
+		AccessToken:  token.AccessToken,
 		RefreshToken: token.Extra("refresh_token").(string),
-		OpenIdToken: token.Extra("id_token").(string),
+		OpenIdToken:  token.Extra("id_token").(string),
 	}
 
 	return

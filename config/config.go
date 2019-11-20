@@ -21,13 +21,13 @@ const (
 )
 
 const (
-	whisperURL   = "whisper-url"
-	clientID     = "client-id"
-	clientSecret = "client-secret"
-	logLevel     = "log-level"
-	scopes       = "scopes"
+	whisperURL        = "whisper-url"
+	clientID          = "client-id"
+	clientSecret      = "client-secret"
+	logLevel          = "log-level"
+	scopes            = "scopes"
 	loginRedirectURI  = "login-redirect-uri"
-	logoutRedirectURI  = "logout-redirect-uri"
+	logoutRedirectURI = "logout-redirect-uri"
 )
 
 // Config define the fields that will be passed via cmd
