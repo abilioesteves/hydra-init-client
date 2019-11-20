@@ -57,6 +57,7 @@ func (oah *oAuthHelper) exchangeCodeForToken(code string) (tokens Tokens, err er
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.Extra("refresh_token").(string),
 		OpenIdToken:  token.Extra("id_token").(string),
+		Scope:        token.Extra("scope").(string),
 	}
 
 	return
