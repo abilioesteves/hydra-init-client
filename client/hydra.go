@@ -35,7 +35,7 @@ func (client *hydraClient) initHydraClient(hydraAdminURL, hydraPublicURL, client
 	}
 
 	if len(logoutRedirectURL) > 0 {
-		client.RedirectURIs = append(client.RedirectURIs, logoutRedirectURL)
+		client.PostLogoutRedirectURIs = append(client.PostLogoutRedirectURIs, logoutRedirectURL)
 	}
 
 	client.tokenEndpointAuthMethod = "none"
@@ -101,6 +101,7 @@ func (client *hydraClient) updateOAuth2Client() (result *OAuth2Client, err error
 			Scopes:                  strings.Join(client.scopes, " "),
 			TokenEndpointAuthMethod: client.tokenEndpointAuthMethod,
 			RedirectURIs:            client.RedirectURIs,
+			PostLogoutRedirectURIs: client.PostLogoutRedirectURIs,
 			GrantTypes:              client.grantTypes,
 		})
 
