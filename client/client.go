@@ -168,7 +168,7 @@ func (client *WhisperClient) GetOAuth2LogoutURL(openidToken, postLogoutRedirectU
 }
 
 // ExchangeCodeForToken retrieves a token provided a valid code
-func (client *WhisperClient) ExchangeCodeForToken(code string) (token *oauth2.Token, err error) {
+func (client *WhisperClient) ExchangeCodeForToken(code string) (token Tokens, err error) {
 	return client.oah.exchangeCodeForToken(code)
 }
 

@@ -46,8 +46,20 @@ func (oah *oAuthHelper) getLogoutURL(openidToken, postLogoutRedirectURI string) 
 }
 
 // ExchangeCodeForToken performs the code exchange for an oauth token
-func (oah *oAuthHelper) exchangeCodeForToken(code string) (token *oauth2.Token, err error) {
-	return oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", oah.state), oauth2.SetAuthURLParam("code_verifier", string(oah.codeVerifier)))
+func (oah *oAuthHelper) exchangeCodeForToken(code string) (tokens Tokens, err error) {
+	token, err := oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", oah.state), oauth2.SetAuthURLParam("code_verifier", string(oah.codeVerifier)))
+
+	if err != nil {
+		return
+	}
+
+	tokens = Tokens {
+		AccessToken: token.AccessToken,
+		RefreshToken: token.Extra("refresh_token").(string),
+		OpenIdToken: token.Extra("id_token").(string),
+	}
+
+	return
 }
 
 // getXOAuth2Client gets an oauth2 client to fire authorization flows

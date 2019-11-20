@@ -47,6 +47,13 @@ type oAuthHelper struct {
 	state        string
 }
 
+type Tokens struct {
+	AccessToken string
+	RefreshToken string
+	OpenIdToken string
+	Scope string
+}
+
 // Token holds a hydra token's data
 type Token struct {
 	Active            bool                   `json:"active"`
