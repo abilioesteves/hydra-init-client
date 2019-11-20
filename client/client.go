@@ -65,7 +65,11 @@ func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
 	}
 
 	if err == nil {
-		if hc.Scopes != strings.Join(client.hc.scopes, " ") || !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) {
+		diffScope := func() bool { return hc.Scopes != strings.Join(client.hc.scopes, " ") }
+		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs)}
+		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs)}
+
+		if diffScope() || diffRedirects() || diffLogoutRedirects() {
 			_, err = client.hc.updateOAuth2Client()
 		}
 
@@ -159,8 +163,8 @@ func (client *WhisperClient) GetOAuth2LoginURL() (string, error) {
 }
 
 // GetOAuth2LogoutURL retrieves the hydra revokeLoginSessions url
-func (client *WhisperClient) GetOAuth2LogoutURL() (string, error) {
-	return client.oah.getLogoutURL()
+func (client *WhisperClient) GetOAuth2LogoutURL(openidToken, postLogoutRedirectURIs string) (string, error) {
+	return client.oah.getLogoutURL(openidToken, postLogoutRedirectURIs)
 }
 
 // ExchangeCodeForToken retrieves a token provided a valid code
