@@ -14,7 +14,7 @@ You can also define the level of event logging by setting the variable `log-leve
 
 After making sure the client exists in the Whisper instance, this utility starts a client_credentials flow and emits a new Access Token (in case the client has defined a client-secret).
 
-When a client-secret is empty, the client is assumed to be public and can only perform Authorization Code flow with PKCE. Read the [RFC](https://tools.ietf.org/html/rfc7636)) for more info.
+When a client-secret is empty, the client is assumed to be public and can only perform Authorization Code flow with PKCE. Read the [RFC 7636](https://tools.ietf.org/html/rfc7636) for more info.
 
 ## Use as a lib
 
@@ -58,7 +58,7 @@ The command above will store the generated token as a file called `token.json`.
 
 ## Use it with docker
 
-To enable the use of the utility abover with other languages, one can create a Docker image with it setting up the oauth client.
+To enable the use of the utility above with other languages, one can create a Docker image with it setting up the oauth client.
 
 To use it with Docker, you can add the utility in build time and call it with the `ENTRYPOINT` command.
 
