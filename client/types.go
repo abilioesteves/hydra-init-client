@@ -18,9 +18,10 @@ const (
 
 // WhisperClient holds the info and structures a whisper client must
 type WhisperClient struct {
-	hc       *hydraClient
-	oah      *oAuthHelper
-	isPublic bool
+	whisperURL *url.URL
+	hc         *hydraClient
+	oah        *oAuthHelper
+	Token      *oauth2.Token
 }
 
 // hydraClient holds data and methods to communicate with an hydra service instance
@@ -45,6 +46,7 @@ type oAuthHelper struct {
 	oauth2Client *oauth2.Config
 }
 
+// Tokens holds all the returned tokens from an authcode flow
 type Tokens struct {
 	AccessToken  string
 	RefreshToken string
