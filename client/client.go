@@ -5,17 +5,17 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/labbsr0x/goh/gohclient"
 	"github.com/labbsr0x/whisper-client/misc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/clientcredentials"
 
-	"github.com/labbsr0x/goh/gohclient"
+	"github.com/gorilla/mux"
 	"github.com/labbsr0x/goh/gohtypes"
 
 	"github.com/labbsr0x/whisper-client/config"
@@ -28,8 +28,8 @@ func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClien
 	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
 	client.whisperURL = config.WhisperURL
 
-	t, err := client.DoClientCredentialsFlow()
-	gohtypes.PanicIfError(fmt.Sprintf("Unable to perform a client credentials flow. Please go to '%v' and register your application.", client.whisperURL), 500, err)
+	t, err := client.CheckCredentials()
+	logrus.Warningf("Unable to perform a client credentials flow. This may result in undesirable behaviour. Reason: %v.", err)
 
 	client.Token = t
 
@@ -61,6 +61,33 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, 
 		LoginRedirectURL:  parsedLoginRedirectURL,
 		LogoutRedirectURL: parsedLogoutRedirectURL,
 	})
+}
+
+// CheckCredentials talks to the admin service to check weather the informed client_id should be created and fires a client credentials flow accordingly
+// client credentials flow is not fired if a password is not provided
+// client credentials flow is also not fired if app is not first-party client
+func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
+	hc, err := client.hc.getHydraOAuth2Client() // if not first-party client, error
+
+	if err == nil && hc == nil { // NOT FOUND; Client should be created
+		hc, err = client.hc.createOAuth2Client()
+	}
+
+	if err == nil {
+		diffScope := func() bool { return hc.Scopes != strings.Join(client.hc.scopes, " ") }
+		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) }
+		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs) }
+
+		if diffScope() || diffRedirects() || diffLogoutRedirects() {
+			_, err = client.hc.updateOAuth2Client()
+		}
+
+		if err == nil {
+			t, err = client.DoClientCredentialsFlow()
+		}
+	}
+
+	return t, err
 }
 
 // GetTokenAsJSONStr stores the token in the environment variables as a json string
