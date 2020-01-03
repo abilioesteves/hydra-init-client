@@ -10,12 +10,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/labbsr0x/goh/gohclient"
+	"github.com/gorilla/mux"
 	"github.com/labbsr0x/whisper-client/misc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/clientcredentials"
 
-	"github.com/gorilla/mux"
+	"github.com/labbsr0x/goh/gohclient"
 	"github.com/labbsr0x/goh/gohtypes"
 
 	"github.com/labbsr0x/whisper-client/config"
