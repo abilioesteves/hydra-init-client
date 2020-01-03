@@ -22,7 +22,7 @@ The following code should get you started:
 
 ```go
 import (
-    whisperClient "github.com/abilioesteves/whisper-client/client"
+    whisperClient "github.com/labbsr0x/whisper-client/client"
 )
 
 //...
@@ -34,14 +34,7 @@ scopes := []string{"client-specific-stuff-01 client-specific-stuff-02"}
 loginRedirectURI := "http://redirect"
 logoutRedirectURI := "http://redirect"
 
-whisperClient.InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURI, logoutRedirectURI, scopes)
-
-t, err := whisperClient.CheckCredentials()
-
-if err == nil {
-    tokenString, err = whisperClient.GetTokenASJSONStr(t)
-    //...
-}
+client := whisperClient.InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURI, logoutRedirectURI, scopes)
 
 //...
 ```
@@ -51,17 +44,13 @@ if err == nil {
 Run the dependencies:
 
 ```bash
-<<<<<<< HEAD
 docker-compose up -d
 ```
 
 Wait a few seconds to stabilize and then:
 
 ```bash
-./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-uri  http://test.com/login --logout-redirect-uri http://test.com/logout --log-level debug --scopes offline,openid,test1,test2  > token.json
-=======
-./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-url http://yourapp/home --logout-redirect-url  http://yourapp --log-level debug --scopes test1,test2  > token.json
->>>>>>> removed client creation from initialization logic; automatically performing client_credentials to atest client correct configurations
+./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-url  http://test.com/login --logout-redirect-url http://test.com/logout --log-level debug --scopes offline,openid,test1,test2  > token.json
 ```
 
 The command above will store the generated token as a file called `token.json`.
