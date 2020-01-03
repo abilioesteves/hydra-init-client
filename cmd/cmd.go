@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/labbsr0x/whisper-client/client"
 
 	"github.com/labbsr0x/whisper-client/config"
@@ -18,17 +16,14 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "whisper-client",
-	Short: "An utility for performing an oauth2 client-credentials flow with Hydra to be used with Whisper",
+	Short: "An utility for performing an OAuth2 authorization_code and client_credentials flow with Whisper",
 	RunE:  Run,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		logrus.Error(err)
-		os.Exit(1)
-	}
+	rootCmd.Execute()
 }
 
 func init() {
@@ -47,13 +42,10 @@ func initConfig() {
 }
 
 // Run defines what should happen when the user runs 'whisper-client'
-func Run(cmd *cobra.Command, args []string) error {
+func Run(cmd *cobra.Command, args []string) (err error) {
 	config := new(config.Config).InitFromViper(viper.GetViper())
-	whisperClient := new(client.WhisperClient).InitFromConfig(config)
-	t, err := whisperClient.CheckCredentials()
-	if err == nil { // store token
-		tokenJSONString := whisperClient.GetTokenAsJSONStr(t)
-		fmt.Printf(tokenJSONString)
-	}
-	return err
+	whisperClient := new(client.WhisperClient).InitFromConfig(config) // init will only succeed after a token gets emitted
+	tokenJSONString := whisperClient.GetTokenAsJSONStr(whisperClient.Token)
+	fmt.Printf(tokenJSONString)
+	return nil
 }

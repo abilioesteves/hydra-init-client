@@ -5,9 +5,9 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 
 	"github.com/labbsr0x/goh/gohclient"
@@ -24,62 +24,43 @@ import (
 
 // InitFromConfig initialize a whisper client from flags
 func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClient {
-	loginRedirectURI, err := url.Parse(config.LoginRedirectURI)
-	gohtypes.PanicIfError("Unable to parse the redirect url", http.StatusInternalServerError, err)
+	client.oah = new(oAuthHelper).init(config.HydraPublicURL, config.LoginRedirectURL, config.ClientID, config.ClientSecret, config.Scopes)
+	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
+	client.whisperURL = config.WhisperURL
 
-	client.oah = new(oAuthHelper).init(config.HydraPublicURL, loginRedirectURI, config.ClientID, config.ClientSecret, config.Scopes)
-	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.LoginRedirectURI, config.LogoutRedirectURI, config.Scopes)
-	client.isPublic = len(strings.ReplaceAll(config.ClientSecret, " ", "")) == 0
+	t, err := client.DoClientCredentialsFlow()
+	gohtypes.PanicIfError(fmt.Sprintf("Unable to perform a client credentials flow. Please go to '%v' and register your application.", client.whisperURL), 500, err)
+
+	client.Token = t
 
 	return client
 }
 
 // InitFromParams initializes a whisper client from normal params
-func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURI, logoutRedirectURI string, scopes []string) *WhisperClient {
+func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURL, logoutRedirectURL string, scopes []string) *WhisperClient {
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(whisperURL)
 
-	whisperURI, err := url.Parse(whisperURL)
+	parsedWhisperURL, err := url.Parse(whisperURL)
 	gohtypes.PanicIfError("Invalid whisper url", 500, err)
-	hydraAdminURI, err := url.Parse(hydraAdminURL)
+	parsedHydraAdminURL, err := url.Parse(hydraAdminURL)
 	gohtypes.PanicIfError("Invalid hydra admin url", 500, err)
-	hydraPublicURI, err := url.Parse(hydraPublicURL)
+	parsedHydraPublicURL, err := url.Parse(hydraPublicURL)
 	gohtypes.PanicIfError("Invalid hydra public url", 500, err)
+	parsedLoginRedirectURL, err := url.Parse(loginRedirectURL)
+	gohtypes.PanicIfError("Invalid login redirect url", 500, err)
+	parsedLogoutRedirectURL, err := url.Parse(logoutRedirectURL)
+	gohtypes.PanicIfError("Invalid logout redirect url", 500, err)
 
 	return client.InitFromConfig(&config.Config{
 		ClientID:          clientID,
 		ClientSecret:      clientSecret,
-		WhisperURL:        whisperURI,
-		HydraAdminURL:     hydraAdminURI,
-		HydraPublicURL:    hydraPublicURI,
+		WhisperURL:        parsedWhisperURL,
+		HydraAdminURL:     parsedHydraAdminURL,
+		HydraPublicURL:    parsedHydraPublicURL,
 		Scopes:            scopes,
-		LoginRedirectURI:  loginRedirectURI,
-		LogoutRedirectURI: logoutRedirectURI,
+		LoginRedirectURL:  parsedLoginRedirectURL,
+		LogoutRedirectURL: parsedLogoutRedirectURL,
 	})
-}
-
-// CheckCredentials talks to the admin service to check wheather the client_id should be created and fires a client credentials flow accordingly (if pkce, client credentials flow is not fired)
-func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
-	hc, err := client.hc.getHydraOAuth2Client()
-
-	if err == nil && hc == nil { // NOT FOUND; Client should be created
-		hc, err = client.hc.createOAuth2Client()
-	}
-
-	if err == nil {
-		diffScope := func() bool { return hc.Scopes != strings.Join(client.hc.scopes, " ") }
-		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) }
-		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs) }
-
-		if diffScope() || diffRedirects() || diffLogoutRedirects() {
-			_, err = client.hc.updateOAuth2Client()
-		}
-
-		if err == nil && !client.isPublic {
-			t, err = client.DoClientCredentialsFlow()
-		}
-	}
-
-	return t, err
 }
 
 // GetTokenAsJSONStr stores the token in the environment variables as a json string

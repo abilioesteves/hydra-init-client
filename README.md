@@ -6,13 +6,13 @@ Defines a script and a library to be used when initializing a client app that co
 
 This script/lib takes care of creating the Whisper client in case it does not exist.
 
-Given that, when firing up your client app, you'll need to provide a `client-id`, a `client-secret`, a `login-redirect-uri`, a `logout-redirect-uri` and Whisper's endpoint `whisper-url`. 
+Given that, when firing up your client app, you'll need to provide a `client-id`, a `client-secret`, a `login-redirect-url`, a `logout-redirect-url` and Whisper's endpoint `whisper-url`. 
 
 The scopes that your application is able to ask for when issuing tokens are set via the `scopes` variable.
 
 You can also define the level of event logging by setting the variable `log-level`.
 
-After making sure the client exists in the Whisper instance, this utility starts a client_credentials flow and emits a new Access Token (in case the client has defined a client-secret).
+After making sure the client exists in the Whisper instance, this utility starts a `client_credentials` flow and emits a new Access Token (in case the client has defined a client-secret).
 
 When a client-secret is empty, the client is assumed to be public and can only perform Authorization Code flow with PKCE. Read the [RFC 7636](https://tools.ietf.org/html/rfc7636) for more info.
 
@@ -51,6 +51,7 @@ if err == nil {
 Run the dependencies:
 
 ```bash
+<<<<<<< HEAD
 docker-compose up -d
 ```
 
@@ -58,6 +59,9 @@ Wait a few seconds to stabilize and then:
 
 ```bash
 ./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-uri  http://test.com/login --logout-redirect-uri http://test.com/logout --log-level debug --scopes offline,openid,test1,test2  > token.json
+=======
+./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-url http://yourapp/home --logout-redirect-url  http://yourapp --log-level debug --scopes test1,test2  > token.json
+>>>>>>> removed client creation from initialization logic; automatically performing client_credentials to atest client correct configurations
 ```
 
 The command above will store the generated token as a file called `token.json`.
