@@ -19,19 +19,13 @@ func (oah *oAuthHelper) init(oauthURL, redirectURL *url.URL, clientID, clientSec
 }
 
 // getLoginURL builds the login url to authenticate with whisper
-func (oah *oAuthHelper) getLoginParams() (url, codeVerifier, state string, err error) {
-	var nonce string
-	state, nonce, err = misc.GetStateAndNonce()
-	if err == nil {
-		var codeChallenge string
-		codeVerifier, codeChallenge, err = misc.GetCodeVerifierAndChallenge()
+func (oah *oAuthHelper) getLoginParams() (url, codeVerifier, state string) {
+	var nonce, codeChallenge string
+	state, nonce = misc.GetStateAndNonce()
+	codeVerifier, codeChallenge = misc.GetCodeVerifierAndChallenge()
+	url = oah.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256"))
 
-		if err == nil {
-			return oah.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256")), codeVerifier, state, err
-		}
-	}
-
-	return url, codeVerifier, state, err
+	return
 }
 
 // getLogoutURL builds the logout url to unauthenticate with whisper

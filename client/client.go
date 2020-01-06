@@ -157,9 +157,10 @@ func (client *WhisperClient) DoClientCredentialsFlow() (t *oauth2.Token, err err
 	return oauthConfig.Token(ctx)
 }
 
-// GetOAuth2LoginURL retrieves the hydra login url
-func (client *WhisperClient) GetOAuth2LoginParams() (string, string, string, error) {
-	return client.oah.getLoginParams()
+// GetOAuth2LoginURL retrieves the hydra login url as well as the code_verifier and the state values used to generate such URL
+func (client *WhisperClient) GetOAuth2LoginParams() (loginURL, codeVerifier, state string) {
+	loginURL, codeVerifier, state = client.oah.getLoginParams()
+	return
 }
 
 // GetOAuth2LogoutURL retrieves the hydra revokeLoginSessions url
