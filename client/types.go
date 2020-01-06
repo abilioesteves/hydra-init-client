@@ -39,12 +39,10 @@ type hydraClient struct {
 
 // oAuthHelper holds the info and methods to help integrate with oauth
 type oAuthHelper struct {
-	codeVerifier string
 	oauthURL     *url.URL
 	clientID     string
 	clientSecret string
 	oauth2Client *oauth2.Config
-	state        string
 }
 
 type Tokens struct {
