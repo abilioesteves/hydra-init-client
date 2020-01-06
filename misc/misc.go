@@ -69,30 +69,23 @@ func GetAccessTokenFromRequest(r *http.Request) (string, error) {
 	return t, nil
 }
 
-func GetStateAndNonce() (state, nonce string, err error) {
-	st, err := randx.RuneSequence(24, randx.AlphaLower)
-	if err == nil {
-		ne, err := randx.RuneSequence(24, randx.AlphaLower)
-
-		if err == nil {
-			return string(st), string(ne), err
-		}
-	}
-	return "", "", nil
+func GetStateAndNonce() (state, nonce string) {
+	st, _ := randx.RuneSequence(24, randx.AlphaLower) // never gives out error, since max > 0
+	ne, _ := randx.RuneSequence(24, randx.AlphaLower) // never gives out error, since max > 0
+	state = string(st)
+	nonce = string(ne)
+	return
 }
 
-func GetCodeVerifierAndChallenge() (codeVerifier string, codeChallenge string, err error) {
-	cv, err := randx.RuneSequence(48, randx.AlphaLower)
-	if err == nil {
-		codeVerifier = string(cv)
+func GetCodeVerifierAndChallenge() (codeVerifier string, codeChallenge string) {
+	cv, _ := randx.RuneSequence(48, randx.AlphaLower) // never gives out error, since max > 0
+	codeVerifier = string(cv)
 
-		hash := sha256.New()
-		hash.Write([]byte(string(codeVerifier)))
-		codeChallenge = base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{}))
+	hash := sha256.New()
+	hash.Write([]byte(string(codeVerifier)))
+	codeChallenge = base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{}))
 
-		return codeVerifier, codeChallenge, nil
-	}
-	return "", "", err
+	return
 }
 
 func GetNoSSLClient() *http.Client {

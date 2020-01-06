@@ -19,19 +19,13 @@ func (oah *oAuthHelper) init(oauthURL, redirectURL *url.URL, clientID, clientSec
 }
 
 // getLoginURL builds the login url to authenticate with whisper
-func (oah *oAuthHelper) getLoginURL() (string, error) {
-	state, nonce, err := misc.GetStateAndNonce()
-	if err == nil {
-		codeVerifier, codeChallenge, err := misc.GetCodeVerifierAndChallenge()
-		oah.codeVerifier = codeVerifier
-		oah.state = state
+func (oah *oAuthHelper) getLoginParams() (url, codeVerifier, state string) {
+	var nonce, codeChallenge string
+	state, nonce = misc.GetStateAndNonce()
+	codeVerifier, codeChallenge = misc.GetCodeVerifierAndChallenge()
+	url = oah.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256"))
 
-		if err == nil {
-			return oah.oauth2Client.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", string(nonce)), oauth2.SetAuthURLParam("code_challenge", codeChallenge), oauth2.SetAuthURLParam("code_challenge_method", "S256")), nil
-		}
-	}
-
-	return "", err
+	return
 }
 
 // getLogoutURL builds the logout url to unauthenticate with whisper
@@ -46,8 +40,8 @@ func (oah *oAuthHelper) getLogoutURL(openidToken, postLogoutRedirectURI string) 
 }
 
 // ExchangeCodeForToken performs the code exchange for an oauth token
-func (oah *oAuthHelper) exchangeCodeForToken(code string) (tokens Tokens, err error) {
-	token, err := oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", oah.state), oauth2.SetAuthURLParam("code_verifier", string(oah.codeVerifier)))
+func (oah *oAuthHelper) exchangeCodeForToken(code, codeVerifier, state string) (tokens Tokens, err error) {
+	token, err := oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", state), oauth2.SetAuthURLParam("code_verifier", string(codeVerifier)))
 
 	if err != nil {
 		return
