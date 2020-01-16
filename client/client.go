@@ -5,14 +5,15 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"github.com/labbsr0x/goh/gohclient"
-	"github.com/labbsr0x/whisper-client/misc"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2/clientcredentials"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
+
+	"github.com/labbsr0x/goh/gohclient"
+	"github.com/labbsr0x/whisper-client/misc"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/gorilla/mux"
 	"github.com/labbsr0x/goh/gohtypes"
@@ -121,7 +122,7 @@ func (client *WhisperClient) IntrospectToken(token string) (result Token, err er
 	httpClient.ContentType = "application/x-www-form-urlencoded"
 	httpClient.Accept = "application/json"
 
-	payload := url.Values{"token": []string{token}, "scopes": client.hc.scopes}
+	payload := url.Values{"token": []string{token}, "scopes": []string{strings.Join(client.hc.scopes, " ")}}
 	payloadData := bytes.NewBufferString(payload.Encode()).Bytes()
 	logrus.Debugf("IntrospectToken - POST payload: '%v'", payloadData)
 
