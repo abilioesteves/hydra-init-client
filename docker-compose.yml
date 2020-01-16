@@ -1,13 +1,27 @@
 version: '3.5'
 
 services:
-  whisper-client:
+
+  whisper:
     build: .
-    image: labbsr0x/whisper-client:latest
+    image: labbsr0x/whisper:latest
     depends_on:
+      - mysqld-whisper
       - hydra
-    command:
-      /whisper-client --client-id teste --client-secret teste123 --hydra-admin-url http://hydra:4445/ --hydra-public-url http://hydra:4444/ --redirect-uris http://test.com,http://test1.com --log-level debug --scopes test1,test2  > token.json
+    ports:
+      - "7070:7070"
+    environment:
+      - WHISPER_PORT=7070
+      - WHISPER_LOG_LEVEL=debug
+      - WHISPER_HYDRA_ADMIN_URL=http://hydra:4445/
+      - WHISPER_HYDRA_PUBLIC_URL=http://hydra:4444/
+      - WHISPER_SECRET_KEY=uhSunsodnsuBsdjsbds
+      - WHISPER_DATABASE_URL=mysql://root:secret@tcp(mysqld-whisper:3306)/whisper?charset=utf8mb4&parseTime=True&loc=Local
+      - WHISPER_MAIL_USER=628ecbe7f53ac2
+      - WHISPER_MAIL_PASSWORD=457cd26e7890c5
+      - WHISPER_MAIL_HOST=smtp.mailtrap.io
+      - WHISPER_MAIL_PORT=2525
+      - WHISPER_PUBLIC_URL=http://localhost:7070
     restart: on-failure
 
   hydra-migrate:
@@ -50,7 +64,16 @@ services:
   mysqld:
     image: mysql:5.7
     ports:
-      - "3306:3306"
+      - 3306
     environment:
       - MYSQL_ROOT_PASSWORD=secret
       - MYSQL_DATABASE=hydra
+
+  mysqld-whisper:
+    image: mysql:5.7
+    ports:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=whisper
+
