@@ -65,18 +65,13 @@ func (c *Config) InitFromViper(v *viper.Viper) *Config {
 
 	c.LoginRedirectURL, err = url.Parse(v.GetString(loginRedirectURL))
 	gohtypes.PanicIfError("Invalid Login Redirect URI", 500, err)
-
 	c.LogoutRedirectURL, err = url.Parse(v.GetString(logoutRedirectURL))
 	gohtypes.PanicIfError("Invalid Logout Redirect URI", 500, err)
-
 	c.WhisperURL, err = url.Parse(v.GetString(whisperURL))
 	gohtypes.PanicIfError("Invalid whisper url", 500, err)
-
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(c.WhisperURL.String()) // get hydra's configs from the whisper instance
-
 	c.HydraAdminURL, err = url.Parse(hydraAdminURL)
 	gohtypes.PanicIfError("Invalid whisper admin url", 500, err)
-
 	c.HydraPublicURL, err = url.Parse(hydraPublicURL)
 	gohtypes.PanicIfError("Invalid whisper public url", 500, err)
 
@@ -98,7 +93,7 @@ func (c *Config) check() {
 		panic("client-id, whisper-url cannot be empty")
 	}
 
-	if len(c.ClientSecret) < 6 {
-		panic("client-secret must be at least 6 characters long")
+	if len(c.ClientSecret) > 0 && len(c.ClientSecret) < 6 {
+		panic("if a client-secret is provided, it must be at least 6 characters long")
 	}
 }

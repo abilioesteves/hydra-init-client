@@ -30,7 +30,7 @@ import (
 whisperURL := "http://localhost:7070"
 clientID := "client"
 clientSecret := "password"
-scopes := []string{"client-specific-stuff-01 client-specific-stuff-02"}
+scopes := []string{"client-specific-stuff-01", "client-specific-stuff-02"}
 loginRedirectURI := "http://redirect"
 logoutRedirectURI := "http://redirect"
 
@@ -50,7 +50,7 @@ docker-compose up -d
 Wait a few seconds to stabilize and then:
 
 ```bash
-./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-uri  http://test.com/login --logout-redirect-uri http://test.com/logout --log-level debug --scopes offline,openid,test1,test2  > token.json
+./whisper-client --client-id teste --client-secret teste123 --whisper-url http://localhost:7070/ --login-redirect-url  http://test.com/login --logout-redirect-url http://test.com/logout --log-level debug --scopes offline,openid,test1,test2  > token.json
 ```
 
 The command above will store the generated token as a file called `token.json`.
@@ -66,7 +66,7 @@ Example:
 ```dockerfile
 #...
 
-from abilioesteves/whisper-client:0.0.1 as whisper-client
+from labbsr0x/whisper-client:latest as whisper-client
 
 from alpine
 
@@ -78,6 +78,6 @@ ENTRYPOINT ["/whisper-client", " > ", "token.json"]
 #...
 ```
 
-Then you can reference the `token.json` file in you code and be able to talk with whisper. Other commands will become available in the near future.
+If `token.json` is not empty or `null`, then everything ran smoothly in your setup. Other commands will become available in the near future.
 
 **Extra**: To avoid defining multiple same-purpose environment variables, use the `CLIENT_ENV_PREFIX` environment variable to reuse them in your app and in the `whisper-client` utility.
