@@ -29,7 +29,9 @@ func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClien
 	client.whisperURL = config.WhisperURL
 
 	t, err := client.CheckCredentials()
-	logrus.Warningf("Unable to perform a client credentials flow. This may result in undesirable behaviour. Reason: %v.", err)
+	if err != nil {
+		logrus.Warningf("Unable to perform a client credentials flow. This may result in undesirable behaviour. Reason: %v.", err)
+	}
 
 	client.Token = t
 
@@ -82,7 +84,7 @@ func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
 			_, err = client.hc.updateOAuth2Client()
 		}
 
-		if err == nil {
+		if err == nil && len(client.oah.clientSecret) >= 6 { // only do client credentials flow if a valid password has been informed
 			t, err = client.DoClientCredentialsFlow()
 		}
 	}
