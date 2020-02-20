@@ -39,7 +39,7 @@ func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClien
 }
 
 // InitFromParams initializes a whisper client from normal params
-func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, clientSecret, loginRedirectURL, logoutRedirectURL string, scopes []string) *WhisperClient {
+func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, clientSecret, publicURL, loginRedirectURL, logoutRedirectURL string, scopes []string) *WhisperClient {
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(whisperURL)
 
 	parsedWhisperURL, err := url.Parse(whisperURL)
@@ -52,6 +52,8 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, cl
 	gohtypes.PanicIfError("Invalid login redirect url", 500, err)
 	parsedLogoutRedirectURL, err := url.Parse(logoutRedirectURL)
 	gohtypes.PanicIfError("Invalid logout redirect url", 500, err)
+	parsedPublicURL, err := url.Parse(publicURL)
+	gohtypes.PanicIfError("Invalid public client URL", 500, err)
 
 	return client.InitFromConfig(&config.Config{
 		ClientName:        clientName,
@@ -63,6 +65,7 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, cl
 		Scopes:            scopes,
 		LoginRedirectURL:  parsedLoginRedirectURL,
 		LogoutRedirectURL: parsedLogoutRedirectURL,
+		PublicURL: parsedPublicURL,
 	})
 }
 

@@ -1,20 +1,20 @@
 # Whisper Client
 
-Defines a script and a library to be used when initializing a client app that communicates with Whisper Admin and Whisper OAuth.
+Defines a script and a library to be used when initializing a client app that communicates with Whisper.
 
 ## Life cycle and params
 
 This script/lib takes care of creating the Whisper client in case it does not exist.
 
-Given that, when firing up your client app, you'll need to provide a `client-id`, a `client-secret`, a `login-redirect-url`, a `logout-redirect-url` and Whisper's endpoint `whisper-url`. 
+Given that, when firing up your client app, you'll need to provide a `client-name`, a `client-id`, a `client-secret`, a `public-url`, a `login-redirect-url`, a `logout-redirect-url` and Whisper's endpoint `whisper-url`. 
 
 The scopes that your application is able to ask for when issuing tokens are set via the `scopes` variable.
 
 You can also define the level of event logging by setting the variable `log-level`.
 
-After making sure the client exists in the Whisper instance, this utility starts a `client_credentials` flow and emits a new Access Token (in case the client has defined a client-secret).
+After making sure the client exists in the Whisper instance, this utility starts a `client_credentials` flow and emits a new Access Token (in case the client has defined a `client-secret`).
 
-When a client-secret is empty, the client is assumed to be public and can only perform Authorization Code flow with PKCE. Read the [RFC 7636](https://tools.ietf.org/html/rfc7636) for more info.
+For better security, Whisper only executes the Authorization Code Flow with PKCE. Read the [RFC 7636](https://tools.ietf.org/html/rfc7636) for more info.
 
 ## Use as a lib
 
@@ -28,13 +28,15 @@ import (
 //...
 
 whisperURL := "http://localhost:7070"
-clientID := "client"
+clientName := "Test App"
+clientID := "testapp"
 clientSecret := "password"
-scopes := []string{"client-specific-stuff-01", "client-specific-stuff-02"}
-loginRedirectURI := "http://redirect"
-logoutRedirectURI := "http://redirect"
+scopes := []string{"offline", "openid", "test1", "test2"}
+publicURL := "http://test.app/"
+loginRedirectURL := "http://test.app/login"
+logoutRedirectURL := "http://test.app/login"
 
-client := whisperClient.InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURI, logoutRedirectURI, scopes)
+client := whisperClient.InitFromParams(whisperURL, clientName, clientID, clientSecret, publicURL, loginRedirectURI, logoutRedirectURI, scopes)
 
 //...
 ```
@@ -50,7 +52,7 @@ docker-compose up -d
 Wait a few seconds to stabilize and then:
 
 ```bash
-./whisper-client --whisper-url http://localhost:7070/ --client-name TesteApp --client-id teste --client-secret teste123 --public-url http://test.com --login-redirect-url  http://test.com/login --logout-redirect-url http://test.com/logout --scopes offline,openid,test1,test2 --log-level debug  > token.json
+./whisper-client --whisper-url http://localhost:7070/ --client-name TesteApp --client-id teste --client-secret password --public-url http://test.app --login-redirect-url  http://test.app/login --logout-redirect-url http://test.app/logout --scopes offline,openid,test1,test2 --log-level debug  > token.json
 ```
 
 The command above will store the generated token as a file called `token.json`.
