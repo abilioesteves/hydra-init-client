@@ -29,6 +29,8 @@ type hydraClient struct {
 	public                 *gohclient.Default
 	admin                  *gohclient.Default
 	scopes                 []string
+	clientURL              string
+	clientName             string
 	clientID               string
 	clientSecret           string
 	RedirectURIs           []string

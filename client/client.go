@@ -25,7 +25,7 @@ import (
 // InitFromConfig initialize a whisper client from flags
 func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClient {
 	client.oah = new(oAuthHelper).init(config.HydraPublicURL, config.LoginRedirectURL, config.ClientID, config.ClientSecret, config.Scopes)
-	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientID, config.ClientSecret, config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
+	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientName, config.ClientID, config.ClientSecret, config.PublicURL.String(), config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
 	client.whisperURL = config.WhisperURL
 
 	t, err := client.CheckCredentials()
@@ -39,7 +39,7 @@ func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClien
 }
 
 // InitFromParams initializes a whisper client from normal params
-func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, loginRedirectURL, logoutRedirectURL string, scopes []string) *WhisperClient {
+func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, clientSecret, loginRedirectURL, logoutRedirectURL string, scopes []string) *WhisperClient {
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(whisperURL)
 
 	parsedWhisperURL, err := url.Parse(whisperURL)
@@ -54,6 +54,7 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientID, clientSecret, 
 	gohtypes.PanicIfError("Invalid logout redirect url", 500, err)
 
 	return client.InitFromConfig(&config.Config{
+		ClientName:        clientName,
 		ClientID:          clientID,
 		ClientSecret:      clientSecret,
 		WhisperURL:        parsedWhisperURL,
@@ -76,11 +77,13 @@ func (client *WhisperClient) CheckCredentials() (t *oauth2.Token, err error) {
 	}
 
 	if err == nil {
+		diffName := func() bool { return hc.ClientName != client.hc.clientName }
+		diffURL := func() bool { return hc.ClientURI != client.hc.clientURL }
 		diffScope := func() bool { return hc.Scopes != strings.Join(client.hc.scopes, " ") }
 		diffRedirects := func() bool { return !reflect.DeepEqual(hc.RedirectURIs, client.hc.RedirectURIs) }
 		diffLogoutRedirects := func() bool { return !reflect.DeepEqual(hc.PostLogoutRedirectURIs, client.hc.PostLogoutRedirectURIs) }
 
-		if diffScope() || diffRedirects() || diffLogoutRedirects() {
+		if diffName() || diffURL() || diffScope() || diffRedirects() || diffLogoutRedirects() {
 			_, err = client.hc.updateOAuth2Client()
 		}
 

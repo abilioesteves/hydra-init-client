@@ -25,7 +25,7 @@ services:
     restart: on-failure
 
   hydra-migrate:
-    image: oryd/hydra:v1.0.0-rc.11
+    image: oryd/hydra:v1.3.2-alpine
     depends_on:
       - mysqld
     environment:
@@ -35,7 +35,7 @@ services:
     restart: on-failure
 
   hydra:
-    image: oryd/hydra:v1.0.0-rc.11
+    image: oryd/hydra:v1.3.2-alpine
     depends_on:
       - hydra-migrate
     ports:
@@ -49,16 +49,19 @@ services:
       serve all --dangerous-force-http
     environment:
       - LOG_LEVEL=debug
-      - OAUTH2_ISSUER_URL=http://localhost:4444
-      - OAUTH2_CONSENT_URL=http://localhost:7070/consent
-      - OAUTH2_LOGIN_URL=http://localhost:7070/login
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
+      - URLS_SELF_ISSUER=http://hydra:4444
+      - URLS_SELF_CONSENT=http://localhost:7070/consent
+      - URLS_SELF_LOGIN=http://localhost:7070/login
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - SERVE_ADMIN_CORS_ENABLED=true
       - DSN=mysql://root:secret@tcp(mysqld:3306)/hydra?max_conns=20&max_idle_conns=4
-      - SYSTEM_SECRET=youReallyNeedToChangeThis
-      - OAUTH2_SHARE_ERROR_DEBUG=1
-      - OIDC_SUBJECT_TYPES_SUPPORTED=public,pairwise
-      - OIDC_SUBJECT_TYPE_PAIRWISE_SALT=youReallyNeedToChangeThis
-      - CORS_ENABLED=true
-      # - OAUTH2_ACCESS_TOKEN_STRATEGY=jwt
+      - TTL_ACCESS_TOKEN=720h
+      - TTL_ID_TOKEN=720h
+      - TTL_REFRESH_TOKEN=-1
+#      - OAUTH2_ACCESS_TOKEN_STRATEGY=jwt # NOT RECOMMENDED: https://www.ory.sh/docs/hydra/advanced#json-web-tokens
     restart: on-failure
 
   mysqld:
