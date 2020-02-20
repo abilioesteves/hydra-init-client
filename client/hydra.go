@@ -13,22 +13,24 @@ import (
 )
 
 // initHydraClient initializes a hydra client
-func (client *hydraClient) initHydraClient(hydraAdminURL, hydraPublicURL, clientID, clientSecret, loginRedirectURL, logoutRedirectURL string, scopes []string) *hydraClient {
+func (client *hydraClient) initHydraClient(hydraAdminURL, hydraPublicURL, clientName, clientID, clientSecret, publicURL, loginRedirectURL, logoutRedirectURL string, scopes []string) *hydraClient {
 	var err error
 	client.public, err = gohclient.New(nil, hydraPublicURL)
 	gohtypes.PanicIfError("Invalid HydraPublicURL", 500, err)
 	client.admin, err = gohclient.New(nil, hydraAdminURL)
 	gohtypes.PanicIfError("Invalid HydraAdminURL", 500, err)
+
 	client.public.ContentType = "application/json"
 	client.admin.ContentType = "application/json"
 	client.public.Accept = "application/json"
 	client.admin.Accept = "application/json"
-
 	client.scopes = scopes
+	client.clientName = clientName
 	client.clientID = clientID
 	client.clientSecret = clientSecret
 	client.RedirectURIs = []string{}
 	client.PostLogoutRedirectURIs = []string{}
+	client.clientURL = publicURL
 
 	if len(loginRedirectURL) > 0 {
 		client.RedirectURIs = append(client.RedirectURIs, loginRedirectURL)
@@ -65,8 +67,10 @@ func (client *hydraClient) createOAuth2Client() (result *OAuth2Client, err error
 	p := path.Join(client.admin.BaseURL.Path, "/clients")
 	payloadData, _ := json.Marshal(
 		OAuth2Client{
+			ClientName:              client.clientName,
 			ClientID:                client.clientID,
 			ClientSecret:            client.clientSecret,
+			ClientURI:               client.clientURL,
 			TokenEndpointAuthMethod: client.tokenEndpointAuthMethod,
 			Scopes:                  strings.Join(client.scopes, " "),
 			GrantTypes:              client.grantTypes,
@@ -96,6 +100,8 @@ func (client *hydraClient) updateOAuth2Client() (result *OAuth2Client, err error
 	p := path.Join(client.admin.BaseURL.Path, "/clients/", client.clientID)
 	payloadData, _ := json.Marshal(
 		OAuth2Client{
+			ClientName:              client.clientName,
+			ClientURI:               client.clientURL,
 			ClientID:                client.clientID,
 			ClientSecret:            client.clientSecret,
 			Scopes:                  strings.Join(client.scopes, " "),
