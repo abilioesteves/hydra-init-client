@@ -2,20 +2,32 @@ package client
 
 import (
 	"context"
-	"github.com/labbsr0x/whisper-client/misc"
+	"fmt"
 	"net/url"
+
+	"github.com/labbsr0x/whisper-client/misc"
 
 	"golang.org/x/oauth2"
 )
 
 // Init initializes the oauth helper from a whisper client
-func (oah *oAuthHelper) init(oauthURL, redirectURL *url.URL, clientID, clientSecret string, scopes []string) *oAuthHelper {
+func (oah *oAuthHelper) init(oauthURL, redirectURL *url.URL, clientID, clientSecret string, scopes []string) (*oAuthHelper, error) {
+	if oauthURL == nil {
+		return nil, fmt.Errorf("OAuthURL cannot be nil")
+	}
+
 	oah.oauthURL = oauthURL
 	oah.clientID = clientID
 	oah.clientSecret = clientSecret
-	oah.oauth2Client = oah.getXOAuth2Client(redirectURL.String(), scopes)
 
-	return oah
+	rURL := ""
+	if redirectURL != nil {
+		rURL = redirectURL.String()
+	}
+	oah.oauth2Client = oah.getXOAuth2Client(rURL, scopes)
+	oah._exchange = oah.oauth2Client.Exchange
+
+	return oah, nil
 }
 
 // getLoginURL builds the login url to authenticate with whisper
@@ -29,19 +41,19 @@ func (oah *oAuthHelper) getLoginParams() (url, codeVerifier, state string) {
 }
 
 // getLogoutURL builds the logout url to unauthenticate with whisper
-func (oah *oAuthHelper) getLogoutURL(openidToken, postLogoutRedirectURI string) (string, error) {
+func (oah *oAuthHelper) getLogoutURL(openidToken, postLogoutRedirectURI string) string {
 	path := oah.oauthURL.String() + "/oauth2/sessions/logout"
 
 	if openidToken != "" && postLogoutRedirectURI != "" {
 		path = path + "?id_token_hint=" + openidToken + "&post_logout_redirect_uri=" + postLogoutRedirectURI
 	}
 
-	return path, nil
+	return path
 }
 
 // ExchangeCodeForToken performs the code exchange for an oauth token
 func (oah *oAuthHelper) exchangeCodeForToken(code, codeVerifier, state string) (tokens Tokens, err error) {
-	token, err := oah.oauth2Client.Exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", state), oauth2.SetAuthURLParam("code_verifier", string(codeVerifier)))
+	token, err := oah._exchange(context.WithValue(context.Background(), oauth2.HTTPClient, misc.GetNoSSLClient()), code, oauth2.SetAuthURLParam("state", state), oauth2.SetAuthURLParam("code_verifier", string(codeVerifier)))
 
 	if err != nil {
 		return
