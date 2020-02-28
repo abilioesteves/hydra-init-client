@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 
@@ -46,6 +47,7 @@ type oAuthHelper struct {
 	clientID     string
 	clientSecret string
 	oauth2Client *oauth2.Config
+	_exchange    func(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }
 
 // Tokens holds all the returned tokens from an authcode flow

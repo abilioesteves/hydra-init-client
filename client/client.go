@@ -26,7 +26,9 @@ import (
 func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClient {
 	gohtypes.PanicIfError("Invalid config", 500, config.Check())
 
-	client.oah = new(oAuthHelper).init(config.HydraPublicURL, config.LoginRedirectURL, config.ClientID, config.ClientSecret, config.Scopes)
+	var err error
+	client.oah, err = new(oAuthHelper).init(config.HydraPublicURL, config.LoginRedirectURL, config.ClientID, config.ClientSecret, config.Scopes)
+	gohtypes.PanicIfError("Error initializing the oauthHelper", 500, err)
 	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientName, config.ClientID, config.ClientSecret, config.PublicURL.String(), config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
 	client.whisperURL = config.WhisperURL
 
@@ -183,7 +185,7 @@ func (client *WhisperClient) GetOAuth2LoginParams() (loginURL, codeVerifier, sta
 }
 
 // GetOAuth2LogoutURL retrieves the hydra revokeLoginSessions url
-func (client *WhisperClient) GetOAuth2LogoutURL(openidToken, postLogoutRedirectURIs string) (string, error) {
+func (client *WhisperClient) GetOAuth2LogoutURL(openidToken, postLogoutRedirectURIs string) string {
 	return client.oah.getLogoutURL(openidToken, postLogoutRedirectURIs)
 }
 
