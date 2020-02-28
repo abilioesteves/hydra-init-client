@@ -6,14 +6,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/labbsr0x/goh/gohclient"
 	"github.com/labbsr0x/goh/gohtypes"
 	"github.com/ory/x/randx"
-	"net/http"
-	"strings"
 )
 
-func RetrieveHydraURLs(baseURL string) (string, string) {
+// RetrieveHydraURLs searches for the additional Hydra configs in a special whisper API
+func RetrieveHydraURLs(baseURL string) (hydraAdminURL string, hydraPublicURL string) {
 	httpClient, err := gohclient.New(nil, baseURL)
 	gohtypes.PanicIfError("Unable to create a client", http.StatusInternalServerError, err)
 
@@ -69,6 +71,7 @@ func GetAccessTokenFromRequest(r *http.Request) (string, error) {
 	return t, nil
 }
 
+// GetStateAndNonce creates two random sequences 24 bytes in length
 func GetStateAndNonce() (state, nonce string) {
 	st, _ := randx.RuneSequence(24, randx.AlphaLower) // never gives out error, since max > 0
 	ne, _ := randx.RuneSequence(24, randx.AlphaLower) // never gives out error, since max > 0
@@ -77,6 +80,7 @@ func GetStateAndNonce() (state, nonce string) {
 	return
 }
 
+// GetCodeVerifierAndChallenge get an oauth code verifier and it's challenge
 func GetCodeVerifierAndChallenge() (codeVerifier string, codeChallenge string) {
 	cv, _ := randx.RuneSequence(48, randx.AlphaLower) // never gives out error, since max > 0
 	codeVerifier = string(cv)
@@ -88,6 +92,7 @@ func GetCodeVerifierAndChallenge() (codeVerifier string, codeChallenge string) {
 	return
 }
 
+// GetNoSSLClient creates a http.Client that skips tls verification
 func GetNoSSLClient() *http.Client {
 	return &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

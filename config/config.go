@@ -1,9 +1,11 @@
 package config
 
 import (
-	"github.com/labbsr0x/whisper-client/misc"
+	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/labbsr0x/whisper-client/misc"
 
 	"github.com/labbsr0x/goh/gohtypes"
 
@@ -76,15 +78,19 @@ func (c *Config) InitFromViper(v *viper.Viper) *Config {
 	gohtypes.PanicIfError("Invalid Login Redirect URL", 500, err)
 	c.LogoutRedirectURL, err = url.Parse(v.GetString(logoutRedirectURL))
 	gohtypes.PanicIfError("Invalid Logout Redirect URL", 500, err)
-	c.WhisperURL, err = url.Parse(v.GetString(whisperURL))
+	wurl := v.GetString(whisperURL)
+	if wurl == "" {
+		gohtypes.Panic("Whisper URL cannot be empty", 500)
+	}
+	c.WhisperURL, err = url.Parse(wurl)
 	gohtypes.PanicIfError("Invalid Whisper URL", 500, err)
 	hydraAdminURL, hydraPublicURL := misc.RetrieveHydraURLs(c.WhisperURL.String()) // get hydra's configs from the whisper instance
 	c.HydraAdminURL, err = url.Parse(hydraAdminURL)
-	gohtypes.PanicIfError("Invalid Whisper Admin URL", 500, err)
+	gohtypes.PanicIfError("Invalid Hydra Admin URL", 500, err)
 	c.HydraPublicURL, err = url.Parse(hydraPublicURL)
-	gohtypes.PanicIfError("Invalid Whisper Public URL", 500, err)
+	gohtypes.PanicIfError("Invalid Hydra Public URL", 500, err)
 
-	c.check()
+	c.Check()
 
 	logLevel, err := logrus.ParseLevel(c.LogLevel)
 	if err != nil {
@@ -97,12 +103,19 @@ func (c *Config) InitFromViper(v *viper.Viper) *Config {
 	return c
 }
 
-func (c *Config) check() {
-	if c.ClientName == "" || c.ClientID == "" || c.WhisperURL.Host == "" {
-		panic("client-name, client-id, whisper-url cannot be empty")
+// Check verifies if the config is valid. Returns a proper error message when invalid
+func (c *Config) Check() error {
+	if c.ClientName == "" || c.ClientID == "" {
+		return fmt.Errorf("client-name and client-id cannot be empty")
+	}
+
+	if c.HydraAdminURL.Host == "" || c.HydraPublicURL.Host == "" {
+		return fmt.Errorf("whisper-url can only be empty if valid hydra admin and public urls are provided")
 	}
 
 	if len(c.ClientSecret) > 0 && len(c.ClientSecret) < 6 {
-		panic("if a client-secret is provided, it must be at least 6 characters long")
+		return fmt.Errorf("if a client-secret is provided, it must be at least 6 characters long")
 	}
+
+	return nil
 }

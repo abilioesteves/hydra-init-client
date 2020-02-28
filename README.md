@@ -52,7 +52,7 @@ docker-compose up -d
 Wait a few seconds to stabilize and then:
 
 ```bash
-./whisper-client --whisper-url http://localhost:7070/ --client-name TesteApp --client-id teste --client-secret password --public-url http://test.app --login-redirect-url  http://test.app/login --logout-redirect-url http://test.app/logout --scopes offline,openid,test1,test2 --log-level debug  > token.json
+./whisper-client --whisper-url http://localhost:7070/ --client-name TesteApp --client-id teste --client-secret password --public-url http://test.app/ --login-redirect-url  http://test.app/login --logout-redirect-url http://test.app/logout --scopes offline,openid,test1,test2 --log-level debug  > token.json
 ```
 
 The command above will store the generated token as a file called `token.json`.

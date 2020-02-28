@@ -24,6 +24,8 @@ import (
 
 // InitFromConfig initialize a whisper client from flags
 func (client *WhisperClient) InitFromConfig(config *config.Config) *WhisperClient {
+	gohtypes.PanicIfError("Invalid config", 500, config.Check())
+
 	client.oah = new(oAuthHelper).init(config.HydraPublicURL, config.LoginRedirectURL, config.ClientID, config.ClientSecret, config.Scopes)
 	client.hc = new(hydraClient).initHydraClient(config.HydraAdminURL.String(), config.HydraPublicURL.String(), config.ClientName, config.ClientID, config.ClientSecret, config.PublicURL.String(), config.LoginRedirectURL.String(), config.LogoutRedirectURL.String(), config.Scopes)
 	client.whisperURL = config.WhisperURL
@@ -65,7 +67,7 @@ func (client *WhisperClient) InitFromParams(whisperURL, clientName, clientID, cl
 		Scopes:            scopes,
 		LoginRedirectURL:  parsedLoginRedirectURL,
 		LogoutRedirectURL: parsedLogoutRedirectURL,
-		PublicURL: parsedPublicURL,
+		PublicURL:         parsedPublicURL,
 	})
 }
 
@@ -174,7 +176,7 @@ func (client *WhisperClient) DoClientCredentialsFlow() (t *oauth2.Token, err err
 	return oauthConfig.Token(ctx)
 }
 
-// GetOAuth2LoginURL retrieves the hydra login url as well as the code_verifier and the state values used to generate such URL
+// GetOAuth2LoginParams retrieves the hydra login url as well as the code_verifier and the state values used to generate such URL
 func (client *WhisperClient) GetOAuth2LoginParams() (loginURL, codeVerifier, state string) {
 	loginURL, codeVerifier, state = client.oah.getLoginParams()
 	return
