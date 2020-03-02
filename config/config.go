@@ -109,8 +109,12 @@ func (c *Config) Check() error {
 		return fmt.Errorf("client-name and client-id cannot be empty")
 	}
 
+	if c.HydraAdminURL == nil || c.HydraPublicURL == nil || c.PublicURL == nil || c.LoginRedirectURL == nil || c.LogoutRedirectURL == nil {
+		return fmt.Errorf("hydra-admin-url, hydra-public-url, public-url, login-redirect-url and logout-redirect-url cannot be nil")
+	}
+
 	if c.HydraAdminURL.Host == "" || c.HydraPublicURL.Host == "" {
-		return fmt.Errorf("whisper-url can only be empty if valid hydra admin and public urls are provided")
+		return fmt.Errorf("hydra-admin-url and hydra-public-url cannot be empty")
 	}
 
 	if len(c.ClientSecret) > 0 && len(c.ClientSecret) < 6 {
