@@ -78,8 +78,9 @@ func (oah *oAuthHelper) getXOAuth2Client(redirectURL string, scopes []string) *o
 		ClientID:     oah.clientID,
 		ClientSecret: oah.clientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  authURL.String(),
-			TokenURL: tokenURL.String(),
+			AuthURL:   authURL.String(),
+			TokenURL:  tokenURL.String(),
+			AuthStyle: oauth2.AuthStyleInParams,
 		},
 		RedirectURL: redirectURL,
 		Scopes:      scopes,
